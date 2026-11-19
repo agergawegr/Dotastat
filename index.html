@@ -142,7 +142,7 @@ function start(id){
   S.profile=r[1];
   var p=S.profile&&S.profile.profile;
   if(p&&p.avatarfull){var a=$("ava");a.style.backgroundImage="url("+p.avatarfull+")";a.textContent=""}
-  return get("/players/"+id+"/matches?limit=20&project=hero_id&project=start_time");
+  return get("/players/"+id+"/matches?limit=20&significant=0&project=hero_id&project=start_time");
  }).then(function(ms){
   if(!ms||!ms.length){$("app").innerHTML='<div class="msg"><b>Матчей не найдено.</b><br>Проверь ID и включи «Показывать публичные данные матчей» в настройках Dota 2. После этого данные появятся в течение нескольких минут.</div><div class="form"><button id="chg">Сменить ID</button></div>';$("chg").onclick=function(){showForm()};return}
   var done=0,out=new Array(ms.length),q=ms.map(function(m,i){return i}),busy=0;
