@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0b0b">
+<title>Dota Gold Stats</title>
+<style>
+:root{--bg:#0b0b0b;--card:#161412;--gold:#d4af37;--gold2:#f3d77a;--text:#f1ead7;--mute:#9a927c;--line:#3a3220;--win:#6fcf7f;--lose:#d9604c}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.wrap{max-width:480px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top,0px)) 14px calc(40px + env(safe-area-inset-bottom,0px))}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px}
+h1{font-size:19px;margin:0;color:var(--gold);letter-spacing:.5px}
+.sub{font-size:12px;color:var(--mute)}
+.ava{width:48px;height:48px;flex:none;border-radius:50%;border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:22px;background:#1b170c center/cover no-repeat;cursor:pointer}
+.seg{display:flex;gap:8px;margin:10px 0 14px}
+.seg button{flex:1;background:var(--card);border:1px solid var(--line);color:var(--mute);padding:10px;border-radius:10px;font-size:14px}
+.seg button.on{background:var(--gold);color:#111;font-weight:700;border-color:var(--gold)}
+.sum{display:flex;gap:8px;margin-bottom:14px}
+.sum div{flex:1;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.sum b{display:block;font-size:19px;color:var(--gold2)}
+.sum span{font-size:11px;color:var(--mute)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:12px}
+.card.top{border-color:var(--gold);box-shadow:0 0 0 1px #d4af3733}
+.row{display:flex;gap:12px}
+.photo{position:relative;width:96px;height:54px;flex:none;border-radius:10px;border:2px solid var(--gold);background:linear-gradient(145deg,#2a2210,#0b0b0b);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:var(--gold);overflow:hidden}
+.photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.info{flex:1;min-width:0}
+.name{font-size:17px;font-weight:700}
+.rank{color:var(--gold);font-size:12px;font-weight:700}
+.meta{font-size:13px;color:var(--mute);margin-top:2px}
+.wr{font-weight:700}
+.bar{height:6px;border-radius:3px;background:#2a2518;overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2))}
+.roles{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.role{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid var(--line);color:var(--mute)}
+.role.main{border-color:var(--gold);color:var(--gold2)}
+.best{margin-top:10px;padding:10px;border-radius:10px;background:#1d180a;border:1px solid var(--gold)}
+.best h4{margin:0 0 8px;font-size:12px;color:var(--gold);text-transform:uppercase;letter-spacing:.6px}
+.items{display:flex;flex-wrap:wrap;gap:5px}
+.it{display:flex;align-items:center;gap:5px;font-size:12px;padding:3px 7px 3px 3px;border-radius:6px;background:#0b0b0b;border:1px solid var(--line)}
+.it img{width:30px;height:22px;border-radius:3px;object-fit:cover}
+.bm{font-size:12px;color:var(--mute);margin-top:7px}
+.more{display:none;margin-top:10px}
+.card.open .more{display:block}
+.b{padding:8px 0;border-top:1px solid var(--line)}
+.tg{width:100%;margin-top:8px;background:none;border:0;color:var(--mute);font-size:12px;padding:6px}
+.msg{text-align:center;color:var(--mute);padding:30px 10px;line-height:1.5;font-size:14px}
+.msg b{color:var(--gold2)}
+.form{background:var(--card);border:1px solid var(--gold);border-radius:14px;padding:16px;margin-top:10px}
+.form p{font-size:13px;color:var(--mute);margin:0 0 10px;line-height:1.5}
+.form input{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:#0b0b0b;color:var(--text);font-size:16px;margin-bottom:10px}
+.form button{width:100%;padding:12px;border-radius:10px;border:0;background:var(--gold);color:#111;font-weight:700;font-size:15px}
+.prog{height:4px;background:#2a2518;border-radius:2px;margin:14px 30px 0;overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:var(--gold);transition:width .2s}
+.note{font-size:11px;color:var(--mute);text-align:center;margin-top:16px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<div><h1>DOTA · МОЙ УРОВЕНЬ</h1><div class="sub" id="sub">Статистика через OpenDota</div></div>
+<div class="ava" id="ava" title="Сменить профиль">👤</div>
+</header>
+<div id="app"></div>
+</div>
+<script>
+var API="https://api.opendota.com/api";
+var CDN="https://cdn.cloudflare.steamstatic.com";
+var LS="dota_gold_id";
+var S={id:null,mode:20,heroes:{},items:{},res:[],profile:null};
+var $=function(i){return document.getElementById(i)};
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function pct(w,g){return g?Math.round(w/g*100):0}
+function get(path){
+ return fetch(API+path).then(function(r){if(!r.ok)throw new Error(r.status);return r.json()});
+}
+function getRetry(path,n){
+ return get(path).catch(function(e){
+  if(n<=0)throw e;
+  return new Promise(function(ok){setTimeout(ok,1500)}).then(function(){return getRetry(path,n-1)});
+ });
+}
+function norm(v){
+ v=String(v).replace(/\D/g,"");
+ if(!v)return null;
+ if(v.length>=16){return String(BigInt(v)-76561197960265728n)}
+ return v;
+}
+function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+
+function showForm(err){
+ $("app").innerHTML='<div class="form"><p><b style="color:var(--gold2)">Введи свой Dota ID</b><br>Это число из профиля Dota 2 (или Steam ID 64). Профиль должен быть с открытой историей матчей: Настройки → Социальные → «Показывать публичные данные матчей».</p>'+
+ (err?'<p style="color:var(--lose)">'+esc(err)+'</p>':'')+
+ '<input id="idin" inputmode="numeric" placeholder="Например 123456789"><button id="go">Показать статистику</button></div>';
+ $("go").onclick=function(){var id=norm($("idin").value);if(!id){showForm("Введи только цифры");return}lsSet(LS,id);start(id)};
+}
+function loading(t,p){
+ $("app").innerHTML='<div class="msg">'+t+'<div class="prog"><i id="pb" style="width:'+(p||0)+'%"></i></div></div>';
+}
+
+function roleOf(me,team){
+ var sorted=team.slice().sort(function(a,b){return (b.gold_per_min||0)-(a.gold_per_min||0)});
+ var rank=sorted.findIndex(function(p){return p.player_slot===me.player_slot})+1;
+ var lr=me.lane_role;
+ if(lr===2)return "Мид (2)";
+ if(lr===1)return rank<=2?"Керри (1)":"Саппорт (5)";
+ if(lr===3)return rank<=3?"Оффлейн (3)":"Саппорт (4)";
+ if(lr===4)return rank<=3?"Лес":"Саппорт (4)";
+ return ["Керри (1)","Мид (2)","Оффлейн (3)","Саппорт (4)","Саппорт (5)"][Math.min(rank,5)-1];
+}
+function parseMatch(m,det,acc){
+ var me=det.players.find(function(p){return String(p.account_id)===acc});
+ if(!me)return null;
+ var rad=me.player_slot<128;
+ var team=det.players.filter(function(p){return (p.player_slot<128)===rad});
+ var items=[];
+ for(var i=0;i<6;i++){var v=me["item_"+i];if(v>0)items.push(v)}
+ return{hero:m.hero_id,win:rad===!!det.radiant_win,role:roleOf(me,team),items:items,t:m.start_time};
+}
+function loadMatch(m,acc){
+ var key="m2_"+acc+"_"+m.match_id,c=lsGet(key);
+ if(c){try{return Promise.resolve(JSON.parse(c))}catch(e){}}
+ return getRetry("/matches/"+m.match_id,2).then(function(d){
+  var r=parseMatch(m,d,acc);
+  if(r)lsSet(key,JSON.stringify(r));
+  return r;
+ }).catch(function(){return null});
+}
+
+function start(id){
+ S.id=id;
+ loading("Загружаю профиль…",5);
+ var consts=Object.keys(S.heroes).length?Promise.resolve():Promise.all([get("/constants/heroes"),get("/constants/items")]).then(function(r){
+  S.heroes=r[0];
+  S.items={};
+  Object.keys(r[1]).forEach(function(k){var it=r[1][k];if(it&&it.id)S.items[it.id]={n:it.dname||k,img:it.img,cost:it.cost||0}});
+ });
+ Promise.all([consts,get("/players/"+id).catch(function(){return null})]).then(function(r){
+  S.profile=r[1];
+  var p=S.profile&&S.profile.profile;
+  if(p&&p.avatarfull){var a=$("ava");a.style.backgroundImage="url("+p.avatarfull+")";a.textContent=""}
+  return get("/players/"+id+"/matches?limit=20&project=hero_id&project=start_time");
+ }).then(function(ms){
+  if(!ms||!ms.length){$("app").innerHTML='<div class="msg"><b>Матчей не найдено.</b><br>Проверь ID и включи «Показывать публичные данные матчей» в настройках Dota 2. После этого данные появятся в течение нескольких минут.</div><div class="form"><button id="chg">Сменить ID</button></div>';$("chg").onclick=function(){showForm()};return}
+  var done=0,out=new Array(ms.length),q=ms.map(function(m,i){return i}),busy=0;
+  return new Promise(function(ok){
+   function next(){
+    if(!q.length){if(busy===0)ok(out);return}
+    var i=q.shift();busy++;
+    loadMatch(ms[i],id).then(function(r){
+     out[i]=r;done++;busy--;
+     loading("Анализирую матчи: "+done+" из "+ms.length,10+done/ms.length*90);
+     next();
+    });
+    if(busy<3)next();
+   }
+   next();
+  });
+ }).then(function(res){
+  if(!res)return;
+  S.res=res.filter(Boolean);
+  render();
+ }).catch(function(e){
+  $("app").innerHTML='<div class="msg"><b>Не удалось загрузить данные.</b><br>Возможно, превышен лимит OpenDota. Подожди минуту и обнови страницу.</div><div class="form"><button id="chg">Сменить ID</button></div>';
+  $("chg").onclick=function(){showForm()};
+ });
+}
+
+function chip(id){
+ var it=S.items[id];if(!it)return"";
+ return'<span class="it"><img src="'+CDN+it.img+'" alt="" onerror="this.remove()">'+esc(it.n)+'</span>';
+}
+function core(items){
+ var c=items.filter(function(i){return S.items[i]&&S.items[i].cost>=1000});
+ if(!c.length)c=items.slice();
+ return c.sort(function(a,b){return (S.items[b]?S.items[b].cost:0)-(S.items[a]?S.items[a].cost:0)});
+}
+
+function render(){
+ var list=S.res.slice(0,S.mode),H={},tw=0;
+ list.forEach(function(g){
+  if(g.win)tw++;
+  var h=H[g.hero]||(H[g.hero]={id:g.hero,g:0,w:0,roles:{},builds:{},iw:{}});
+  h.g++;if(g.win)h.w++;
+  h.roles[g.role]=(h.roles[g.role]||0)+1;
+  var c=core(g.items),k=c.slice().sort().join("-");
+  var b=h.builds[k]||(h.builds[k]={items:c,g:0,w:0});
+  b.g++;if(g.win){b.w++;c.forEach(function(i){h.iw[i]=(h.iw[i]||0)+1})}
+ });
+ var top=Object.keys(H).map(function(k){return H[k]}).sort(function(a,b){return b.g-a.g||pct(b.w,b.g)-pct(a.w,a.g)}).slice(0,5);
+ var p=S.profile,pr=p&&p.profile,tiers=["","Рекрут","Страж","Рыцарь","Герой","Легенда","Властелин","Божество","Титан"];
+ var rt=p&&p.rank_tier,rk=rt?(tiers[Math.floor(rt/10)]||"")+(rt%10?" "+(rt%10):""):"";
+ $("sub").textContent=(pr&&pr.personaname?pr.personaname:"ID "+S.id)+(rk?" · "+rk:"");
+ var h='<div class="seg"><button data-n="10"'+(S.mode===10?' class="on"':'')+'>10 игр</button><button data-n="20"'+(S.mode===20?' class="on"':'')+'>20 игр</button></div>'+
+ '<div class="sum"><div><b>'+list.length+'</b><span>игр</span></div><div><b>'+pct(tw,list.length)+'%</b><span>винрейт</span></div><div><b>'+tw+'–'+(list.length-tw)+'</b><span>победы–пор.</span></div></div>';
+ top.forEach(function(t,k){
+  var hero=S.heroes[t.id]||{localized_name:"Герой "+t.id,name:""};
+  var nm=hero.localized_name,wr=pct(t.w,t.g);
+  var im=hero.name?CDN+"/apps/dota2/images/dota_react/heroes/"+hero.name.replace("npc_dota_hero_","")+".png":"";
+  var roles=Object.keys(t.roles).sort(function(a,b){return t.roles[b]-t.roles[a]}).map(function(r,j){return'<span class="role'+(j===0?' main':'')+'">'+r+' · '+t.roles[r]+'</span>'}).join("");
+  var bl=Object.keys(t.builds).map(function(k2){return t.builds[k2]}).sort(function(a,b){return b.w-a.w||pct(b.w,b.g)-pct(a.w,a.g)||b.g-a.g});
+  var best=bl[0];
+  var frequent=Object.keys(t.iw).sort(function(a,b){return t.iw[b]-t.iw[a]}).slice(0,4);
+  var more=bl.slice(1).map(function(x){return'<div class="b"><div class="items">'+x.items.map(chip).join("")+'</div><div class="bm">'+x.g+' игр · побед '+x.w+' · '+pct(x.w,x.g)+'%</div></div>'}).join("");
+  h+='<div class="card'+(k===0?' top':'')+'"><div class="row"><div class="photo">'+esc(nm.slice(0,2).toUpperCase())+(im?'<img src="'+im+'" alt="" onerror="this.remove()">':'')+'</div>'+
+  '<div class="info"><div class="rank">#'+(k+1)+'</div><div class="name">'+esc(nm)+'</div>'+
+  '<div class="meta">'+t.g+' игр · <span class="wr" style="color:'+(wr>=50?'var(--win)':'var(--lose)')+'">'+wr+'% побед</span></div></div></div>'+
+  '<div class="bar"><i style="width:'+wr+'%"></i></div>'+
+  '<div class="roles">'+roles+'</div>'+
+  '<div class="best"><h4>★ Лучшая сборка</h4><div class="items">'+best.items.map(chip).join("")+'</div><div class="bm">'+(best.w?best.g+' игр · '+best.w+' побед · '+pct(best.w,best.g)+'%':'С этой сборкой побед пока нет — '+best.g+' игр')+'</div>'+
+  (frequent.length&&t.w?'<div class="bm">Чаще всего в победах: '+frequent.map(function(i){return esc(S.items[i].n)}).join(", ")+'</div>':'')+'</div>'+
+  (more?'<div class="more"><div class="sub">Другие сборки</div>'+more+'</div><button class="tg">Показать другие сборки ▾</button>':'')+'</div>';
+ });
+ h+='<div class="note">Сборка = финальные предметы в инвентаре на конец матча (дорогие, от 1000 золота). Роль определяется по линии и золоту в минуту, поэтому может быть приблизительной.<br>Данные: OpenDota</div>';
+ $("app").innerHTML=h;
+ [].forEach.call(document.querySelectorAll(".seg button"),function(b){b.onclick=function(){S.mode=+b.dataset.n;render()}});
+ [].forEach.call(document.querySelectorAll(".tg"),function(b){b.onclick=function(){var c=b.parentNode;c.classList.toggle("open");b.textContent=c.classList.contains("open")?"Скрыть ▴":"Показать другие сборки ▾"}});
+}
+
+$("ava").onclick=function(){showForm()};
+var q=new URLSearchParams(location.search).get("id");
+var saved=norm(q||"")||lsGet(LS);
+if(saved){lsSet(LS,saved);start(saved)}else showForm();
+</script>
+</body>
+</html>
